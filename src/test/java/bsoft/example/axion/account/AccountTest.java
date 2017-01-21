@@ -1,9 +1,6 @@
 package bsoft.example.axion.account;
 
-import bsoft.example.axion.coreapi.AccountCreatedEvent;
-import bsoft.example.axion.coreapi.CreateAccountCommand;
-import bsoft.example.axion.coreapi.MoneyWithdrawnEvent;
-import bsoft.example.axion.coreapi.WithdrawMoneyCommand;
+import bsoft.example.axion.coreapi.*;
 import org.axonframework.test.FixtureConfiguration;
 import org.junit.Before;
 import org.axonframework.test.Fixtures;
@@ -55,4 +52,13 @@ public class AccountTest {
                 .expectNoEvents()
                 .expectException(OverdraftLimteExceededException.class);
     }
+
+    @Test
+    public void testDepositReasonableAmount() throws Exception {
+        fixture.given(new AccountCreatedEvent("1234", 1000),
+                new MoneyDepositEvent("1234", 500))
+                .when(new WithdrawMoneyCommand("1234", 400))
+                .expectEvents(new MoneyWithdrawnEvent("1234", 400, 100));
+    }
+
 }

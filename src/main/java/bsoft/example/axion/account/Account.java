@@ -1,9 +1,6 @@
 package bsoft.example.axion.account;
 
-import bsoft.example.axion.coreapi.AccountCreatedEvent;
-import bsoft.example.axion.coreapi.CreateAccountCommand;
-import bsoft.example.axion.coreapi.MoneyWithdrawnEvent;
-import bsoft.example.axion.coreapi.WithdrawMoneyCommand;
+import bsoft.example.axion.coreapi.*;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.model.AggregateIdentifier;
@@ -40,18 +37,28 @@ public class Account {
     }
 
     @CommandHandler
+    public void handle(DepositMoneyCommand command) {
+        apply(new MoneyDepositEvent(accountId, command.getAmount()));
+    }
+
+    @CommandHandler
     public void handle(WithdrawMoneyCommand command) throws OverdraftLimteExceededException {
-        if (balance + overdraftLimit >= command.getAmount()) {
-            apply(new MoneyWithdrawnEvent(accountId, command.getAmount(), balance - command.getAmount()));
-        } else {
-            throw new OverdraftLimteExceededException();
-        }
+            if (balance + overdraftLimit >= command.getAmount()) {
+                apply(new MoneyWithdrawnEvent(accountId, command.getAmount(), balance - command.getAmount()));
+            } else {
+                throw new OverdraftLimteExceededException();
+            }
     }
 
     @EventSourcingHandler
     public void on(AccountCreatedEvent event) {
         this.accountId = event.getAccountId();
         this.overdraftLimit = event.getOverdraftLimit();
+    }
+
+    @EventSourcingHandler
+    public void on(MoneyDepositEvent event) {
+        this.balance = this.balance + event.getDepositAmount();
     }
 
     @EventSourcingHandler
